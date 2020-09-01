@@ -8,12 +8,6 @@ $ResourceLocation = "NorthEurope"
 $WVDLocation = "eastUS"
 $ResourceGroupName = 'WVD_test'
 $prefix = 'WGUISW'
-$desktopWorkspaceName = $prefix + "_WSPACE_DESKTOP"
-$desktopHostPoolName = $prefix + "_HOST_POOL_DESKTOP"
-$desktopAppGroupeName = $prefix + "_APP_GROUP_DESKTOP"
-$remoteWorkspaceName = $prefix + "_WSPACE_REMOTE"
-$remoteHostPoolName = $prefix + "_HOST_POOL_REMOTE"
-$remoteAppGroupeName = $prefix + "_APP_GROUP_REMOTE"
 $maxLimit = 2
 
 $WVDConfig = @(
