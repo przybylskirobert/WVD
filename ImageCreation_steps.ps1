@@ -66,26 +66,18 @@ $VerbosePreference = "continue"
 #endregion
 
 #region Upload Image to SIG
-    Write-Verbose "Looking for SharedImageGallery:'$galleryName'"
+    Write-Verbose "Looking for SharedImageGallery: '$galleryName'"
     $gallery = Get-AzGallery -Name $galleryName -ResourceGroupName $giResourceGroupName
-    Write-Verbose "Looking for VM:'$vmName'"
-    $vm = Get-AzVM -ResourceGroupName $vmresourceGroupName -Name $vmName
-    $vmStatus = (Get-AZVM -ResourceGroupName $vmresourceGroupName -Name $vmName -status).statuses[1].DisplayStatus
-    if ($vmStatus -ne 'VM Deallocated') {
-        Write-Verbose "Stopping vm:'$vmName'"
-        Stop-AzVM -ResourceGroupName $vmresourceGroupName -Name $vmName -Force
-    }
-    else {
-        Write-Verbose "VM:'$vmName' deallocated."
-    }
+    $imageID = (Get-AzImage -ResourceGroupName $giResourceGroupName -ImageName $imageName).id
+
     Write-Verbose "Creating ImageDefinition"
-    $imageDefinition = New-AzGalleryImageDefinition -GalleryName $gallery.Name -ResourceGroupName $giResourceGroupName -Location $resourceLocation -Name 'ImageDefinition1' -OsState Generalized -OsType Windows -Publisher 'WGUISW' -Offer 'WGUISW123' -Sku '123'
+    $imageDefinition = New-AzGalleryImageDefinition -GalleryName $gallery.Name -ResourceGroupName $giResourceGroupName -Location $resourceLocation -Name 'Windows10-MU-AcrobatDC' -OsState Generalized -OsType Windows -Publisher 'Azureblog' -Offer 'Azureblog' -Sku '1'
 
     $region1 = @{Name='northeurope';ReplicaCount=1}
     $targetRegions = @($region1)
-
+    
     Write-Verbose "Creating ImageVersion"
-    New-AzGalleryImageVersion -GalleryImageDefinitionName $imageDefinition.Name -GalleryImageVersionName '1.0.0' -GalleryName $gallery.Name -ResourceGroupName $giResourceGroupName -Location $resourceLocation -TargetRegion $targetRegions -Source $vm.Id.ToString() -PublishingProfileEndOfLifeDate '2021-10-06' -asJob 
+    New-AzGalleryImageVersion -GalleryImageDefinitionName $imageDefinition.Name -GalleryImageVersionName '1.0.1' -GalleryName $gallery.Name -ResourceGroupName $giResourceGroupName -Location $resourceLocation -TargetRegion $targetRegions -SourceImageId $imageID -PublishingProfileEndOfLifeDate '2021-10-06' -asJob 
 
 #endregion
 $VerbosePreference = $oldVerbose
