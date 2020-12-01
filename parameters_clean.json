@@ -1,0 +1,119 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "northeurope"
+        },
+        "virtualMachineScaleSetName": {
+            "value": "vmss-neu"
+        },
+        "imageReferenceid": {
+            "value": "/subscriptions/{Subscription}/resourceGroups/{ImageResourceGroup}/providers/Microsoft.Compute/images/{Image}"
+        },
+        "virtualMachineScaleSetRG": {
+            "value": "rg-wvd-neu"
+        },
+        "singlePlacementGroup": {
+            "value": "true"
+        },
+        "instanceSize": {
+            "value": "Standard_DS1_v2"
+        },
+        "instanceCount": {
+            "value": "2"
+        },
+        "upgradeMode": {
+            "value": "Manual"
+        },
+        "priority": {
+            "value": "Regular"
+        },
+        "enableAcceleratedNetworking": {
+            "value": "false"
+        },
+        "subnetId": {
+            "value": "/subscriptions/{Subscription}/resourceGroups/{ResourceGroup}/providers/Microsoft.Network/virtualNetworks/{VirtualNetwork}/subnets/{Subnet}"
+        },
+        "osDiskType": {
+            "value": "StandardSSD_LRS"
+        },
+        "virtualNetworkId": {
+            "value": "/subscriptions/{Subscription}/resourceGroups/{ResourceGroup}/providers/Microsoft.Network/virtualNetworks/{VirtualNetwork}"
+        },
+        "virtualNetworkName": {
+            "value": "{VirtualNetwork}"
+        },
+        "networkInterfaceConfigurations": {
+            "value": [
+                {
+                    "name": "{VirtualNetwork}-nic01",
+                    "primary": true,
+                    "applicationGatewayBackendAddressPools": [],
+                    "loadBalancerBackendAddressPools": [],
+                    "applicationSecurityGroups": [],
+                    "loadBalancerInboundNatPools": [],
+                    "enableAcceleratedNetworking": false,
+                    "nsgName": "{NetworkSecurityGroup}",
+                    "nsgId": "/subscriptions/{Subscription}/resourceGroups/{ResourceGroup}/providers/Microsoft.Network/networkSecurityGroups/{NetworkSecurityGroup}",
+                    "pipName": ""
+                }
+            ]
+        },
+        "vmName": {
+            "value": "vmss-neu"
+        },
+        "scaleInPolicy": {
+            "value": {
+                "rules": [
+                    "Default"
+                ]
+            }
+        },
+        "overprovision": {
+            "value": true
+        },
+        "upgradePolicy": {
+            "value": "Manual"
+        },
+        "adminUsername": {
+            "value": "sysop"
+        },
+        "adminPassword": {
+            "value": null
+        },
+        "platformFaultDomainCount": {
+            "value": "5"
+        },
+        "autoScaleDefault": {
+            "value": "2"
+        },
+        "autoScaleMin": {
+            "value": "2"
+        },
+        "autoScaleMax": {
+            "value": "2"
+        },
+        "scaleOutCPUPercentageThreshold": {
+            "value": "75"
+        },
+        "durationTimeWindow": {
+            "value": "60"
+        },
+        "scaleOutInterval": {
+            "value": "1"
+        },
+        "scaleInCPUPercentageThreshold": {
+            "value": "25"
+        },
+        "scaleInInterval": {
+            "value": "1"
+        },
+        "domainName": {
+            "value": "lab.azureblog.pl"
+        },
+        "OUDN": {
+            "value": "OU=WVD,DC=lab,DC=azureblog,DC=pl"
+        }
+    }
+}
