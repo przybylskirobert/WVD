@@ -1,3 +1,5 @@
+Throw "This is not a robust file"
+
 $oldVerbose = $VerbosePreference
 $VerbosePreference = "continue" 
 
