@@ -1,3 +1,6 @@
+Throw "This is not a robust file"
+
+#region Variables
 $verboseSettings = $VerbosePreference
 $VerbosePreference = 'Continue'
 $toolsPath = "C:\Tools"
@@ -8,6 +11,9 @@ $bootLoaderURL = "https://query.prod.cms.rt.microsoft.com/cms/api/am/binary/RWrx
 $bootLoaderMSI = "Microsoft.RDInfra.RDAgentBootLoader.Installer-x64.msi"
 $bootLoaderMSIPath = "$toolsPath\$bootLoaderMSI"
 
+#endregion
+
+#region agents installation
 
 $toolsTest = Test-Path -Path $toolsPath
 if ($toolsTest -eq $false){
@@ -27,8 +33,12 @@ Set-Location "$toolsPath"
 Start-Sleep -Seconds 60
 . .\$bootLoaderMSI
 
-Push-Location "$env:SystemRoot\system32\sysprep"
-. .\sysprep.exe
-Pop-Location 
+#endregion
 
+#region sysprep
+Remove-Item C:\tools -Recurse -Force
+
+. $env:SystemRoot\system32\sysprep\sysprep.exe
+
+#endregion
 $VerbosePreference = $verboseSettings 
