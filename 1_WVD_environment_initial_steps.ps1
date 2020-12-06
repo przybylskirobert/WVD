@@ -72,7 +72,7 @@ foreach ($entry in $WVDConfig) {
         Write-Verbose "ApplicationGroup:'$appGroupName' already exist."
     }
     Write-Verbose "Assigning group '$WVDusersGroupName' to the Application Group '$appGroupName'"
-    New-AzRoleAssignment -ObjectId $wvd_UsersGroup.ObjectID -RoleDefinitionName "Desktop Virtualization User" -ResourceName $appGroupName -ResourceGroupName $resourceGroupName -ResourceType `Microsoft.DesktopVirtualization/applicationGroups'
+    New-AzRoleAssignment -ObjectId $wvd_UsersGroup.ObjectID -RoleDefinitionName "Desktop Virtualization User" -ResourceName $appGroupName -ResourceGroupName $resourceGroupName -ResourceType 'Microsoft.DesktopVirtualization/applicationGroups'
 
 }
 #endregion
