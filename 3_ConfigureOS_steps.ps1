@@ -74,7 +74,7 @@ Write-Verbose "Expanding Archive '$optimalizationScriptZIP ' into '$Optimalizati
 Expand-Archive -LiteralPath $optimalizationScriptZIP -DestinationPath $OptimalizationFolderName
 Set-Location "$OptimalizationFolderName\Virtual-Desktop-Optimization-Tool-master"
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
-.\Win10_VirtualDesktop_Optimize.ps1 -WindowsVersion 2004 Write-Verbose
+.\Win10_VirtualDesktop_Optimize.ps1 -WindowsVersion 2004 -Verbose
 
 #endregion
 
