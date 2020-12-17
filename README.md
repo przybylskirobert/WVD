@@ -20,7 +20,8 @@ If you want to use FSLogix in your environment this could be handy:
 - [3_ConfigureOS_steps.ps1](https://github.com/przybylskirobert/WVD/blob/master/3_ConfigureOS_steps.ps1)
 
 For VMSS usage take a look at here:
-- Blog article coming soon.
+- [Windows Virtual Desktop: VMSS usage
+](https://www.azureblog.pl/2020/12/17/windows-virtual-desktop-deployment-5-5/)
 - [4_VMSS_GoldenImage_configuration_steps.ps1](https://github.com/przybylskirobert/WVD/blob/master/4_VMSS_GoldenImage_configuration_steps.ps1)
 - [VMSS_deployment_template.json](https://github.com/przybylskirobert/WVD/blob/master/VMSS_deployment_template.json)
 - [VMSS_deployment_parameters.json](https://github.com/przybylskirobert/WVD/blob/master/VMSS_deployment_parameters.json)
