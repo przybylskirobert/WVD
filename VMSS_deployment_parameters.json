@@ -1,119 +1,284 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "location": {
-            "value": "northeurope"
+            "type": "String"
         },
         "virtualMachineScaleSetName": {
-            "value": "vmss-neu"
-        },
-        "imageReferenceid": {
-            "value": "/subscriptions/{Subscription}/resourceGroups/{ImageResourceGroup}/providers/Microsoft.Compute/images/{Image}"
+            "type": "String"
         },
         "virtualMachineScaleSetRG": {
-            "value": "rg-wvd-neu"
+            "type": "String"
         },
         "singlePlacementGroup": {
-            "value": "true"
+            "type": "String"
         },
         "instanceSize": {
-            "value": "Standard_DS1_v2"
+            "type": "String"
         },
         "instanceCount": {
-            "value": "2"
+            "type": "String"
         },
         "upgradeMode": {
-            "value": "Manual"
+            "type": "String"
         },
         "priority": {
-            "value": "Regular"
+            "type": "String"
         },
         "enableAcceleratedNetworking": {
-            "value": "false"
+            "type": "String"
         },
         "subnetId": {
-            "value": "/subscriptions/{Subscription}/resourceGroups/{ResourceGroup}/providers/Microsoft.Network/virtualNetworks/{VirtualNetwork}/subnets/{Subnet}"
+            "type": "String"
+        },
+        "imageReferenceid": {
+            "type": "String"
         },
         "osDiskType": {
-            "value": "StandardSSD_LRS"
+            "type": "String"
         },
         "virtualNetworkId": {
-            "value": "/subscriptions/{Subscription}/resourceGroups/{ResourceGroup}/providers/Microsoft.Network/virtualNetworks/{VirtualNetwork}"
+            "type": "String"
         },
         "virtualNetworkName": {
-            "value": "{VirtualNetwork}"
+            "type": "String"
         },
         "networkInterfaceConfigurations": {
-            "value": [
-                {
-                    "name": "{VirtualNetwork}-nic01",
-                    "primary": true,
-                    "applicationGatewayBackendAddressPools": [],
-                    "loadBalancerBackendAddressPools": [],
-                    "applicationSecurityGroups": [],
-                    "loadBalancerInboundNatPools": [],
-                    "enableAcceleratedNetworking": false,
-                    "nsgName": "{NetworkSecurityGroup}",
-                    "nsgId": "/subscriptions/{Subscription}/resourceGroups/{ResourceGroup}/providers/Microsoft.Network/networkSecurityGroups/{NetworkSecurityGroup}",
-                    "pipName": ""
-                }
-            ]
+            "type": "Array"
         },
         "vmName": {
-            "value": "vmss-neu"
+            "type": "String"
         },
         "scaleInPolicy": {
-            "value": {
-                "rules": [
-                    "Default"
+            "type": "Object"
+        },
+        "upgradePolicy": {
+            "type": "String"
+        },
+        "adminUsername": {
+            "type": "String"
+        },
+        "adminPassword": {
+            "type": "SecureString"
+        },
+        "autoScaleDefault": {
+            "type": "String"
+        },
+        "autoScaleMin": {
+            "type": "String"
+        },
+        "autoScaleMax": {
+            "type": "String"
+        },
+        "scaleOutCPUPercentageThreshold": {
+            "type": "String"
+        },
+        "durationTimeWindow": {
+            "type": "String"
+        },
+        "scaleOutInterval": {
+            "type": "String"
+        },
+        "scaleInCPUPercentageThreshold": {
+            "type": "String"
+        },
+        "scaleInInterval": {
+            "type": "String"
+        },
+        "platformFaultDomainCount": {
+            "type": "String"
+        },
+        "domainName": {
+            "type": "String"
+        },
+        "OUDN": {
+            "type": "String"
+        },
+        "domainAndUsername": {
+            "type": "String",
+            "metadata": {
+                "description": "You must provide the username in the following convention NETBIOS BACKSLASH USERNAME "
+            }
+        },
+        "domainJoinPassword": {
+            "type": "SecureString"
+        }
+    },
+    "variables": {
+        "storageApiVersion": "2019-06-01",
+        "namingInfix": "[toLower(substring(concat(parameters('virtualMachineScaleSetName'), uniqueString(resourceGroup().id)), 0, 9))]",
+        "vmssId": "[resourceId('Microsoft.Compute/virtualMachineScaleSets', parameters('virtualMachineScaleSetName'))]",
+        "autoScaleResourceName": "[concat(parameters('virtualMachineScaleSetName'), 'autoscale')]",
+        "domainJoinOptions": 3
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Insights/autoscaleSettings",
+            "apiVersion": "2015-04-01",
+            "name": "[variables('autoScaleResourceName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachineScaleSets/', parameters('virtualMachineScaleSetName'))]"
+            ],
+            "properties": {
+                "name": "[variables('autoScaleResourceName')]",
+                "targetResourceUri": "[variables('vmssId')]",
+                "enabled": true,
+                "profiles": [
+                    {
+                        "name": "Profile1",
+                        "capacity": {
+                            "minimum": "[parameters('autoScaleMin')]",
+                            "maximum": "[parameters('autoScaleMax')]",
+                            "default": "[parameters('autoScaleDefault')]"
+                        },
+                        "rules": [
+                            {
+                                "metricTrigger": {
+                                    "metricName": "Percentage CPU",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[variables('vmssId')]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "[concat('PT', parameters('durationTimeWindow'), 'M')]",
+                                    "timeAggregation": "Average",
+                                    "operator": "GreaterThan",
+                                    "threshold": "[parameters('scaleOutCPUPercentageThreshold')]"
+                                },
+                                "scaleAction": {
+                                    "direction": "Increase",
+                                    "type": "ChangeCount",
+                                    "value": "[parameters('scaleOutInterval')]",
+                                    "cooldown": "PT1M"
+                                }
+                            },
+                            {
+                                "metricTrigger": {
+                                    "metricName": "Percentage CPU",
+                                    "metricNamespace": "",
+                                    "metricResourceUri": "[variables('vmssId')]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT5M",
+                                    "timeAggregation": "Average",
+                                    "operator": "LessThan",
+                                    "threshold": "[parameters('scaleInCPUPercentageThreshold')]"
+                                },
+                                "scaleAction": {
+                                    "direction": "Decrease",
+                                    "type": "ChangeCount",
+                                    "value": "[parameters('scaleInInterval')]",
+                                    "cooldown": "PT1M"
+                                }
+                            }
+                        ]
+                    }
                 ]
             }
         },
-        "overprovision": {
-            "value": true
-        },
-        "upgradePolicy": {
-            "value": "Manual"
-        },
+        {
+            "type": "Microsoft.Compute/virtualMachineScaleSets",
+            "apiVersion": "2019-07-01",
+            "name": "[parameters('virtualMachineScaleSetName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [],
+            "sku": {
+                "name": "[parameters('instanceSize')]",
+                "capacity": "[int(parameters('instanceCount'))]"
+            },
+            "properties": {
+                "overprovision": "true",
+                "upgradePolicy": {
+                    "mode": "[parameters('upgradePolicy')]"
+                },
+                "singlePlacementGroup": "[parameters('singlePlacementGroup')]",
+                "virtualMachineProfile": {
+                    "storageProfile": {
+                        "osDisk": {
+                            "createOption": "fromImage",
+                            "caching": "ReadWrite",
+                            "managedDisk": {
+                                "storageAccountType": "[parameters('osDiskType')]"
+                            }
+                        },
+                        "imageReference": {
+                            "id": "[parameters('imageReferenceid')]"
+                        }
+                    },
+                    "priority": "[parameters('priority')]",
+                    "networkProfile": {
+                        "copy": [
+                            {
+                                "name": "networkInterfaceConfigurations",
+                                "count": "[length(parameters('networkInterfaceConfigurations'))]",
+                                "input": {
+                                    "name": "[parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].name]",
+                                    "properties": {
+                                        "primary": "[parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].primary]",
+                                        "enableAcceleratedNetworking": "[parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].enableAcceleratedNetworking]",
+                                        "ipConfigurations": [
+                                            {
+                                                "name": "[concat(parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].name, '-defaultIpConfiguration')]",
+                                                "properties": {
+                                                    "subnet": {
+                                                        "id": "[parameters('subnetId')]"
+                                                    },
+                                                    "primary": "[parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].primary]",
+                                                    "applicationGatewayBackendAddressPools": "[parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].applicationGatewayBackendAddressPools]",
+                                                    "loadBalancerBackendAddressPools": "[parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].loadBalancerBackendAddressPools]",
+                                                    "loadBalancerInboundNatPools": "[parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].loadBalancerInboundNatPools]",
+                                                    "publicIPAddressConfiguration": "[if( equals( parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].pipName, ''), json('null'), union(json(concat('{\"name\": \"', parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].pipName, '\"}'))\n                        ,json('{\"properties\": { \"idleTimeoutInMinutes\": 15}}')))]"
+                                                }
+                                            }
+                                        ],
+                                        "networkSecurityGroup": "[if( equals( parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].nsgId, ''), json('null'),json(concat('{\"id\": \"', parameters('networkInterfaceConfigurations')[copyIndex('networkInterfaceConfigurations')].nsgId, '\"}')))]"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "extensionProfile": {
+                        "extensions": [
+                            {
+                                "name": "joindomain",
+                                "properties": {
+                                    "publisher": "Microsoft.Compute",
+                                    "type": "JsonADDomainExtension",
+                                    "typeHandlerVersion": "1.3",
+                                    "settings": {
+                                        "Name": "[parameters('domainName')]",
+                                        "OUPath": "[parameters('OUDN')]",
+                                        "User": "[parameters('domainAndUsername')]",
+                                        "Restart": "true",
+                                        "Options": "[variables('domainJoinOptions')]"
+                                    },
+                                    "protectedsettings": {
+                                        "Password": "[parameters('domainJoinPassword')]"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "osProfile": {
+                        "computerNamePrefix": "[variables('namingInfix')]",
+                        "adminUsername": "[parameters('adminUsername')]",
+                        "adminPassword": "[parameters('adminPassword')]",
+                        "windowsConfiguration": {
+                            "provisionVmAgent": true
+                        }
+                    },
+                    "licenseType": "Windows_Client"
+                },
+                "scaleInPolicy": "[parameters('scaleInPolicy')]",
+                "platformFaultDomainCount": "[parameters('platformFaultDomainCount')]"
+            }
+        }
+    ],
+    "outputs": {
         "adminUsername": {
-            "value": "sysop"
-        },
-        "adminPassword": {
-            "value": null
-        },
-        "platformFaultDomainCount": {
-            "value": "5"
-        },
-        "autoScaleDefault": {
-            "value": "2"
-        },
-        "autoScaleMin": {
-            "value": "2"
-        },
-        "autoScaleMax": {
-            "value": "2"
-        },
-        "scaleOutCPUPercentageThreshold": {
-            "value": "75"
-        },
-        "durationTimeWindow": {
-            "value": "60"
-        },
-        "scaleOutInterval": {
-            "value": "1"
-        },
-        "scaleInCPUPercentageThreshold": {
-            "value": "25"
-        },
-        "scaleInInterval": {
-            "value": "1"
-        },
-        "domainName": {
-            "value": "lab.azureblog.pl"
-        },
-        "OUDN": {
-            "value": "OU=WVD,DC=lab,DC=azureblog,DC=pl"
+            "type": "String",
+            "value": "[parameters('adminUsername')]"
         }
     }
 }
