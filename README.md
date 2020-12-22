@@ -36,6 +36,6 @@ Before the deployemnt please create the following resource groups:
 - **ResourceGroupPrefix**-wvd-**RegionSuffix** -> test_rg-wvd-neu
 
 After resource groups creation during the deployment update the following parameters:
-- **ResourceGroupPrefix
-- **RegionSuffix
+- ResourceGroupPrefix
+- RegionSuffix
 
