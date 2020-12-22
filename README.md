@@ -39,3 +39,4 @@ After resource groups creation during the deployment update the following parame
 - ResourceGroupPrefix
 - RegionSuffix
 
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fhttps://raw.githubusercontent.com/przybylskirobert/WVD/master/WVD_core_components.json)
