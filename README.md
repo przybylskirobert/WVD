@@ -2,6 +2,7 @@
 Hi there!
 This is my place where I'm putting all the scripts and config files regarding Windows Virtual Desktop.
 
+## Manual Deployment
 If you want to start from scratch use those links:
 - [Windows Virtual Desktop: Initial deployment](https://www.azureblog.pl/2020/09/19/windows-virtual-desktop-deployment-1-5/)
 - [1_WVD_environment_initial_steps.ps1](https://github.com/przybylskirobert/WVD/blob/master/1_WVD_environment_initial_steps.ps1) 
@@ -26,11 +27,9 @@ For VMSS usage take a look at here:
 - [VMSS_deployment_template.json](https://github.com/przybylskirobert/WVD/blob/master/VMSS_deployment_template.json)
 - [VMSS_deployment_parameters.json](https://github.com/przybylskirobert/WVD/blob/master/VMSS_deployment_parameters.json)
 
-For all in one deployment use the following json files:
-- [WVD_core_components.json](https://github.com/przybylskirobert/WVD/blob/master/WVD_core_components.json)
-- [WVD_core_components_parameters.json](https://github.com/przybylskirobert/WVD/blob/master/WVD_core_components_parameters.json)
+## Automater (ARM) deployment 
 
-Before the deployemnt please create the following resource groups:
+Before the deployment please create the following resource groups:
 - **ResourceGroupPrefix**-mgmt-**RegionSuffix** -> test_rg-mgmt-neu
 - **ResourceGroupPrefix**-network-**RegionSuffix** -> test_rg-network-neu
 - **ResourceGroupPrefix**-wvd-**RegionSuffix** -> test_rg-wvd-neu
@@ -39,4 +38,8 @@ After resource groups creation during the deployment update the following parame
 - ResourceGroupPrefix
 - RegionSuffix
 
+For all in one deployment use the following buton:
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fprzybylskirobert%2FWVD%2Fmaster%2FWVD_core_components.json)
+
+
+
