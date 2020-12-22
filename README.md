@@ -27,7 +27,7 @@ For VMSS usage take a look at here:
 - [VMSS_deployment_template.json](https://github.com/przybylskirobert/WVD/blob/master/VMSS_deployment_template.json)
 - [VMSS_deployment_parameters.json](https://github.com/przybylskirobert/WVD/blob/master/VMSS_deployment_parameters.json)
 
-## Automater (ARM) deployment 
+## Automated (ARM) deployment 
 
 Before the deployment please create the following resource groups:
 - **ResourceGroupPrefix**-mgmt-**RegionSuffix** -> test_rg-mgmt-neu
