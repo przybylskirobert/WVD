@@ -25,3 +25,15 @@ For VMSS usage take a look at here:
 - [4_VMSS_GoldenImage_configuration_steps.ps1](https://github.com/przybylskirobert/WVD/blob/master/4_VMSS_GoldenImage_configuration_steps.ps1)
 - [VMSS_deployment_template.json](https://github.com/przybylskirobert/WVD/blob/master/VMSS_deployment_template.json)
 - [VMSS_deployment_parameters.json](https://github.com/przybylskirobert/WVD/blob/master/VMSS_deployment_parameters.json)
+
+For all in one deployment use the following json files:
+- [WVD_core_components.json](https://github.com/przybylskirobert/WVD/blob/master/WVD_core_components.json)
+- [WVD_core_components_parameters.json](https://github.com/przybylskirobert/WVD/blob/master/WVD_core_components_parameters.json)
+Before the deployemnt please create the following resource groups:
+- (ResourceGroupPrefix)-mgmt-(RegionSuffix) -> test_rg-mgmt-neu
+- (ResourceGroupPrefix)-network-(RegionSuffix) -> test_rg-network-neu
+- (ResourceGroupPrefix)-wvd-(RegionSuffix) -> test_rg-wvd-neu
+After resource groups creation during the deployment update the following parameters:
+--ResourceGroupPrefix
+--RegionSuffix
+
