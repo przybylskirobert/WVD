@@ -1,0 +1,75 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ResourceGroupPrefix": {
+            "value": "test_rg"
+        },
+        "EnvironmentName": {
+            "value": "azureblog"
+        },
+        "IPAddressSpace": {
+            "value": "10.10"
+        },
+        "RegionSuffix": {
+            "value": "neu"
+        },
+        "DataRetention": {
+            "value": 365
+        },
+        "virtualMachineName": {
+            "value": "gi-w10"
+        },
+        "virtualMachineSize": {
+            "value": "Standard_DS1_v2"
+        },
+        "adminUsername": {
+            "value": "sysop"
+        },
+        "adminPassword": {
+            "value": "CDE#4rfvbgt5"
+        },
+        "hostpoolDescription": {
+            "value": "Created through the WVD extension"
+        },
+        "allApplicationGroupReferences": {
+            "value": ""
+        },
+        "hostpoolTags": {
+            "value": {}
+        },
+        "hostpoolType": {
+            "value": "Pooled"
+        },
+        "customRdpProperty": {
+            "value": ""
+        },
+        "personalDesktopAssignmentType": {
+            "value": ""
+        },
+        "maxSessionLimit": {
+            "value": 2
+        },
+        "loadBalancerType": {
+            "value": "BreadthFirst"
+        },
+        "validationEnvironment": {
+            "value": false
+        },
+        "preferredAppGroupType": {
+            "value": "Desktop"
+        },
+        "vmTemplate": {
+            "value": ""
+        },
+        "applicationGroupTags": {
+            "value": {}
+        },
+        "workspaceLocation": {
+            "value": "eastus"
+        },
+        "addToWorkspace": {
+            "value": true
+        }
+    }
+}

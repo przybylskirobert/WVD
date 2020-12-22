@@ -1,0 +1,790 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ResourceGroupPrefix": {
+            "type": "string",
+            "defaultValue": "test_rg",
+            "metadata": {
+                "description": "Prefix used for resource group naming - (ResourceGroupPrefix)-azureblog-neu"
+            }
+        },
+        "EnvironmentName": {
+            "type": "string",
+            "defaultValue": "azureblog",
+            "metadata": {
+                "description": "This parameter will apear under multiple resources names - rg-(EnvironmentName)-neu"
+            }
+        },
+        "RegionSuffix": {
+            "type": "string",
+            "defaultValue": "neu",
+            "metadata": {
+                "description": "3 characters acronym for region - rg-azurelog-(RegionSuffix)"
+            }
+        },
+        "IPAddressSpace": {
+            "type": "string",
+            "defaultValue": "10.10",
+            "metadata": {
+                "description": "First 2 (two) octets, rest will be autoamtically updated"
+            }
+        },
+        "DataRetention": {
+            "type": "int",
+            "defaultValue": 365,
+            "minValue": 0,
+            "maxValue": 365,
+            "metadata": {
+                "displayName": "Log retention in days",
+                "description": "Number of days data will be retained for"
+            }
+        },
+        "virtualMachineName": {
+            "type": "string",
+            "metadata": {
+                "description": "VM name will contain vm-(virtualMAchineName)-neu"
+            },
+            "defaultValue": "gi-w10"
+        },
+        "virtualMachineSize": {
+            "type": "string",
+            "defaultValue": "Standard_DS1_v2"
+        },
+        "AdminUsername": {
+            "type": "string",
+            "defaultValue": "sysop"
+        },
+        "AdminPassword": {
+            "type": "string",
+            "metadata": {
+                "description": "This password will be used to access"
+            }
+        },
+        "baseTime": {
+            "type": "string",
+            "defaultValue": "[utcNow('u')]"
+        },
+        "hostpoolDescription": {
+            "type": "string",
+            "metadata": {
+                "description": "The description of the Hostpool to be created."
+            },
+            "defaultValue": "Created through the WVD extension"
+        },
+        "allApplicationGroupReferences": {
+            "type": "string",
+            "metadata": {
+                "description": "The existing app groups references of the workspace selected."
+            },
+            "defaultValue": ""
+        },
+        "hostpoolTags": {
+            "type": "object",
+            "metadata": {
+                "description": "The tags to be assigned to the hostpool"
+            },
+            "defaultValue": {}
+        },
+        "hostpoolType": {
+            "type": "string",
+            "allowedValues": [
+                "Personal",
+                "Pooled"
+            ],
+            "metadata": {
+                "description": "Set this parameter to Personal if you would like to enable Persistent Desktop experience. Defaults to false."
+            },
+            "defaultValue": "Pooled"
+        },
+        "customRdpProperty": {
+            "type": "string",
+            "metadata": {
+                "description": "Hostpool rdp properties"
+            },
+            "defaultValue": ""
+        },
+        "personalDesktopAssignmentType": {
+            "type": "string",
+            "allowedValues": [
+                "Automatic",
+                "Direct",
+                ""
+            ],
+            "metadata": {
+                "description": "Set the type of assignment for a Personal hostpool type"
+            },
+            "defaultValue": ""
+        },
+        "maxSessionLimit": {
+            "type": "int",
+            "metadata": {
+                "description": "Maximum number of sessions."
+            },
+            "defaultValue": 2
+        },
+        "loadBalancerType": {
+            "type": "string",
+            "allowedValues": [
+                "BreadthFirst",
+                "DepthFirst",
+                "Persistent"
+            ],
+            "metadata": {
+                "description": "Type of load balancer algorithm."
+            },
+            "defaultValue": "BreadthFirst"
+        },
+        "validationEnvironment": {
+            "type": "bool",
+            "metadata": {
+                "description": "Whether to use validation enviroment."
+            },
+            "defaultValue": false
+        },
+        "preferredAppGroupType": {
+            "type": "string",
+            "metadata": {
+                "description": "Preferred App Group type to display"
+            },
+            "defaultValue": "Desktop"
+        },
+        "vmTemplate": {
+            "type": "string",
+            "metadata": {
+                "description": "The necessary information for adding more VMs to this Hostpool"
+            },
+            "defaultValue": ""
+        },
+        "applicationGroupTags": {
+            "type": "object",
+            "metadata": {
+                "description": "The tags to be assigned to the application group"
+            },
+            "defaultValue": {}
+        },
+        "workspaceLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "The location of the workspace."
+            },
+            "defaultValue": "eastus"
+        },
+        "addToWorkspace": {
+            "type": "bool",
+            "metadata": {
+                "description": "Whether to add applicationGroup to workspace."
+            },
+            "defaultValue": true
+        }
+    },
+    "variables": {
+        "rgNetwork": "[concat(parameters('ResourceGroupPrefix'), '-network-', parameters('RegionSuffix'))]",
+        "rgMgmt": "[concat(parameters('ResourceGroupPrefix'), '-mgmt-', parameters('RegionSuffix'))]",
+        "rgWvd": "[concat(parameters('ResourceGroupPrefix'), '-wvd-', parameters('RegionSuffix'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "nestedNetworkDeployment",
+            "resourceGroup": "[variables('rgNetwork')]",
+            "properties": {
+                "expressionEvaluationOptions": {
+                    "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                    "envName": {
+                        "value": "[parameters('EnvironmentName')]"
+                    },
+                    "regSuffix": {
+                        "value": "[parameters('RegionSuffix')]"
+                    },
+                    "IPAddrSpace": {
+                        "value": "[parameters('IPAddressSpace')]"
+                    }
+                },
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "envName": {
+                            "type": "string"
+                        },
+                        "regSuffix": {
+                            "type": "string"
+                        },
+                        "IPAddrSpace": {
+                            "type": "string"
+                        }
+                    },
+                    "variables": {
+                        "vNET_Info": [
+                            {
+                                "vNET_Name": "[concat('vnet-', parameters('envName'), '-', parameters('regSuffix'))]",
+                                "vNET_AddressSpace": "[concat(parameters('IPAddrSpace'),'.0.0/24')]",
+                                "vNET_Subnet_GATEWAY_Name": "GatewaySubnet",
+                                "vNET_Subnet_GATEWAY_CIDR": "[concat(parameters('IPAddrSpace'), '.0.0/28')]",
+                                "vNET_Subnet_ADDS_Name": "[concat('snet-adds-', parameters('regSuffix'))]",
+                                "vNET_Subnet_ADDS_CIDR": "[concat(parameters('IPAddrSpace'), '.0.16/28')]",
+                                "vNET_Subnet_MGMT_Name": "[concat('snet-mgmt-', parameters('regSuffix'))]",
+                                "vNET_Subnet_MGMT_CIDR": "[concat(parameters('IPAddrSpace'), '.0.32/27')]",
+                                "vNET_Subnet_WVD_Name": "[concat('snet-wvd-', parameters('regSuffix'))]",
+                                "vNET_Subnet_WVD_CIDR": "[concat(parameters('IPAddrSpace'), '.0.64/27')]"
+                            }
+                        ],
+                        "location": "[resourceGroup().location]"
+                    },
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/virtualNetworks",
+                            "name": "[variables('vNET_Info')[copyIndex()].vNET_Name]",
+                            "apiVersion": "2017-08-01",
+                            "location": "[variables('location')]",
+                            "copy": {
+                                "name": "vNET_Copy",
+                                "count": "[length(variables('vNET_Info'))]"
+                            },
+                            "tags": {
+                                "displayName": "Virtual Network"
+                            },
+                            "properties": {
+                                "addressSpace": {
+                                    "addressPrefixes": [
+                                        "[variables('vNET_Info')[copyIndex()].vNET_AddressSpace]"
+                                    ]
+                                },
+                                "subnets": [
+                                    {
+                                        "name": "[variables('vNET_Info')[copyIndex()].vNET_Subnet_GATEWAY_Name]",
+                                        "properties": {
+                                            "addressPrefix": "[variables('vNET_Info')[copyIndex()].vNET_Subnet_GATEWAY_CIDR]"
+                                        }
+                                    },
+                                    {
+                                        "name": "[variables('vNET_Info')[copyIndex()].vNET_Subnet_ADDS_Name]",
+                                        "properties": {
+                                            "addressPrefix": "[variables('vNET_Info')[copyIndex()].vNET_Subnet_ADDS_CIDR]"
+                                        }
+                                    },
+                                    {
+                                        "name": "[variables('vNET_Info')[copyIndex()].vNET_Subnet_MGMT_Name]",
+                                        "properties": {
+                                            "addressPrefix": "[variables('vNET_Info')[copyIndex()].vNET_Subnet_MGMT_CIDR]"
+                                        }
+                                    },
+                                    {
+                                        "name": "[variables('vNET_Info')[copyIndex()].vNET_Subnet_WVD_Name]",
+                                        "properties": {
+                                            "addressPrefix": "[variables('vNET_Info')[copyIndex()].vNET_Subnet_WVD_CIDR]"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/providers/locks",
+                            "apiVersion": "2016-09-01",
+                            "name": "[concat(variables('vNET_Info')[copyIndex()].vNET_Name, '/Microsoft.Authorization/AzureVNet-DoNotDelete')]",
+                            "copy": {
+                                "name": "vNETLock_Copy",
+                                "count": "[length(variables('vNET_Info'))]"
+                            },
+                            "dependsOn": [
+                                "vNET_Copy"
+                            ],
+                            "comments": "Resource lock on Azure vNET",
+                            "properties": {
+                                "level": "CannotDelete"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "nestedMGMTDeployment",
+            "resourceGroup": "[variables('rgMgmt')]",
+            "properties": {
+                "expressionEvaluationOptions": {
+                    "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                    "envName": {
+                        "value": "[parameters('EnvironmentName')]"
+                    },
+                    "regSuffix": {
+                        "value": "[parameters('RegionSuffix')]"
+                    },
+                    "dtaRetention": {
+                        "value": "[parameters('DataRetention')]"
+                    },
+                    "vmName": {
+                        "value": "[parameters('virtualMachineName')]"
+                    },
+                    "vmSize": {
+                        "value": "[parameters('virtualMachineSize')]"
+                    },
+                    "admName": {
+                        "value": "[parameters('AdminUsername')]"
+                    },
+                    "admPassword": {
+                        "value": "[parameters('AdminPassword')]"
+                    },
+                    "rgNetwork": {
+                        "value": "[variables('rgNetwork')]"
+                    },
+                    "rgMGMT": {
+                        "value": "[variables('rgMgmt')]"
+                    }
+                },
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "envName": {
+                            "type": "string"
+                        },
+                        "regSuffix": {
+                            "type": "string"
+                        },
+                        "dtaRetention": {
+                            "type": "int"
+                        },
+                        "vmName": {
+                            "type": "string"
+                        },
+                        "vmSize": {
+                            "type": "string"
+                        },
+                        "admName": {
+                            "type": "string"
+                        },
+                        "admPassword": {
+                            "type": "string"
+                        },
+                        "rgNetwork": {
+                            "type": "string"
+                        },
+                        "rgMgmt": {
+                            "type": "string"
+                        }
+                    },
+                    "variables": {
+                        "location": "[resourceGroup().location]",
+                        "virtualMachineComputerName": "[concat('vm-', parameters('vmName'), '-', parameters('regSuffix'))]",
+                        "virtualNetworkId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('rgNetwork'), '/providers/Microsoft.Network/virtualNetworks/vnet-', parameters('envName'), '-', parameters('regSuffix'))]",
+                        "subnetName": "[concat('snet-mgmt-', parameters('regSuffix'))]",
+                        "subnetRef": "[concat(variables('virtualNetworkId'), '/subnets/', variables('subnetName'))]",
+                        "networkInterfaceName": "[concat(variables('virtualMachineComputerName'), '-nic')]",
+                        "publicIpAddressName": "[concat(variables('virtualMachineComputerName'), '-pip')]",
+                        "uniqueString": "[uniqueString(subscription().id, concat(parameters('envName'), '-diaglog'))]",
+                        "diagnosticsStorageAccountName": "[toLower(substring(replace(concat('sa' , parameters('envName'), parameters('regSuffix'), variables('uniqueString'), variables('uniqueString')), '-', ''), 0, 23) )]",
+                        "diagnosticsStorageAccountId": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers//Microsoft.Storage/storageAccount/', variables('diagnosticsStorageAccountName'))]",
+                        "networkSecurityGroupName": "[concat(variables('virtualMachineComputerName'), '-nsg')]",
+                        "nsgId": "[resourceId(resourceGroup().name, 'Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]",
+                        "deploymentprefix": "[concat(parameters('envName'), '-diag')]",
+                        "omsworkspacename": "[concat('la-', parameters('envName'), '-', parameters('regSuffix'))]"
+                    },
+                    "resources": [
+                        {
+                            "type": "Microsoft.Storage/storageAccounts",
+                            "name": "[variables('diagnosticsStorageAccountName')]",
+                            "apiVersion": "2018-07-01",
+                            "location": "[variables('location')]",
+                            "kind": "StorageV2",
+                            "sku": {
+                                "name": "Standard_LRS"
+                            },
+                            "tags": {
+                                "displayName": "Storage Account"
+                            },
+                            "properties": {
+                                "encryption": {
+                                    "keySource": "Microsoft.Storage",
+                                    "services": {
+                                        "blob": {
+                                            "enabled": true
+                                        },
+                                        "file": {
+                                            "enabled": true
+                                        }
+                                    }
+                                },
+                                "supportsHttpsTrafficOnly": true
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Storage/storageAccounts/providers/locks",
+                            "apiVersion": "2016-09-01",
+                            "name": "[concat(variables('diagnosticsStorageAccountName'), '/Microsoft.Authorization/storageDoNotDelete')]",
+                            "dependsOn": [
+                                "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticsStorageAccountName'))]"
+                            ],
+                            "comments": "Resource lock on diagnostic storage account",
+                            "properties": {
+                                "level": "CannotDelete"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationalInsights/workspaces",
+                            "name": "[variables('omsworkspacename')]",
+                            "apiVersion": "2017-03-15-preview",
+                            "location": "[resourceGroup().location]",
+                            "tags": {
+                                "displayName": "Log Analytics"
+                            },
+                            "properties": {
+                                "sku": {
+                                    "Name": "pergb2018"
+                                },
+                                "retention": "[parameters('dtaRetention')]"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.OperationalInsights/workspaces/providers/locks",
+                            "apiVersion": "2016-09-01",
+                            "name": "[concat(variables('omsworkspacename'), '/Microsoft.Authorization/logAnalyticsDoNotDelete')]",
+                            "dependsOn": [
+                                "[variables('omsworkspacename')]"
+                            ],
+                            "comments": "Resource lock on Log Analytics",
+                            "properties": {
+                                "level": "CannotDelete"
+                            }
+                        },
+                        {
+                            "name": "[variables('networkInterfaceName')]",
+                            "type": "Microsoft.Network/networkInterfaces",
+                            "apiVersion": "2018-10-01",
+                            "location": "[variables('location')]",
+                            "dependsOn": [
+                                "[concat('Microsoft.Network/networkSecurityGroups/', variables('networkSecurityGroupName'))]",
+                                "[concat('Microsoft.Network/publicIpAddresses/', variables('publicIpAddressName'))]"
+                            ],
+                            "properties": {
+                                "ipConfigurations": [
+                                    {
+                                        "name": "ipconfig1",
+                                        "properties": {
+                                            "subnet": {
+                                                "id": "[variables('subnetRef')]"
+                                            },
+                                            "privateIPAllocationMethod": "Dynamic",
+                                            "publicIpAddress": {
+                                                "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/publicIpAddresses', variables('publicIpAddressName'))]"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "networkSecurityGroup": {
+                                    "id": "[variables('nsgId')]"
+                                }
+                            }
+                        },
+                        {
+                            "name": "[variables('networkSecurityGroupName')]",
+                            "type": "Microsoft.Network/networkSecurityGroups",
+                            "apiVersion": "2019-02-01",
+                            "location": "[variables('location')]",
+                            "properties": {
+                                "securityRules": [
+                                    {
+                                        "name": "RDP",
+                                        "properties": {
+                                            "priority": 300,
+                                            "protocol": "Tcp",
+                                            "access": "Allow",
+                                            "direction": "Inbound",
+                                            "sourceApplicationSecurityGroups": [],
+                                            "destinationApplicationSecurityGroups": [],
+                                            "sourceAddressPrefix": "*",
+                                            "sourcePortRange": "*",
+                                            "destinationAddressPrefix": "*",
+                                            "destinationPortRange": "3389"
+                                        }
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "name": "[variables('publicIpAddressName')]",
+                            "type": "Microsoft.Network/publicIpAddresses",
+                            "apiVersion": "2019-02-01",
+                            "location": "[variables('location')]",
+                            "properties": {
+                                "publicIpAllocationMethod": "Dynamic"
+                            },
+                            "sku": {
+                                "name": "Basic"
+                            }
+                        },
+                        {
+                            "name": "[variables('virtualMachineComputerName')]",
+                            "type": "Microsoft.Compute/virtualMachines",
+                            "apiVersion": "2020-06-01",
+                            "location": "[variables('location')]",
+                            "dependsOn": [
+                                "[concat('Microsoft.Network/networkInterfaces/', variables('networkInterfaceName'))]",
+                                "[concat('Microsoft.Storage/storageAccounts/', variables('diagnosticsStorageAccountName'))]"
+                            ],
+                            "properties": {
+                                "hardwareProfile": {
+                                    "vmSize": "[parameters('vmSize')]"
+                                },
+                                "storageProfile": {
+                                    "osDisk": {
+                                        "createOption": "fromImage",
+                                        "managedDisk": {
+                                            "storageAccountType": "StandardSSD_LRS"
+                                        }
+                                    },
+                                    "imageReference": {
+                                        "publisher": "MicrosoftWindowsDesktop",
+                                        "offer": "Windows-10",
+                                        "sku": "20h1-evd",
+                                        "version": "latest"
+                                    }
+                                },
+                                "networkProfile": {
+                                    "networkInterfaces": [
+                                        {
+                                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+                                        }
+                                    ]
+                                },
+                                "osProfile": {
+                                    "computerName": "[variables('virtualMachineComputerName')]",
+                                    "adminUsername": "[parameters('admName')]",
+                                    "adminPassword": "[parameters('admPassword')]",
+                                    "windowsConfiguration": {
+                                        "enableAutomaticUpdates": true,
+                                        "provisionVmAgent": true,
+                                        "patchSettings": {
+                                            "patchMode": "AutomaticByOS"
+                                        }
+                                    }
+                                },
+                                "licenseType": "Windows_Client",
+                                "diagnosticsProfile": {
+                                    "bootDiagnostics": {
+                                        "enabled": true,
+                                        "storageUri": "[concat('https://', variables('diagnosticsStorageAccountName'), '.blob.core.windows.net/')]"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2017-05-10",
+            "name": "nestedWVDDeployment",
+            "resourceGroup": "[variables('rgWvd')]",
+            "properties": {
+                "expressionEvaluationOptions": {
+                    "scope": "inner"
+                },
+                "mode": "Incremental",
+                "parameters": {
+                    "envName": {
+                        "value": "[parameters('EnvironmentName')]"
+                    },
+                    "regSuffix": {
+                        "value": "[parameters('RegionSuffix')]"
+                    },
+                    "baseTime": {
+                        "value": "[parameters('baseTime')]"
+                    },
+                    "hostpoolDescription": {
+                        "value": "[parameters('hostpoolDescription')]"
+                    },
+                    "allApplicationGroupReferences": {
+                        "value": "[parameters('allApplicationGroupReferences')]"
+                    },
+                    "hostpoolTags": {
+                        "value": "[parameters('hostpoolTags')]"
+                    },
+                    "hostpoolType": {
+                        "value": "[parameters('hostpoolType')]"
+                    },
+                    "customRdpProperty": {
+                        "value": "[parameters('customRdpProperty')]"
+                    },
+                    "personalDesktopAssignmentType": {
+                        "value": "[parameters('personalDesktopAssignmentType')]"
+                    },
+                    "maxSessionLimit": {
+                        "value": "[parameters('maxSessionLimit')]"
+                    },
+                    "loadBalancerType": {
+                        "value": "[parameters('loadBalancerType')]"
+                    },
+                    "validationEnvironment": {
+                        "value": "[parameters('validationEnvironment')]"
+                    },
+                    "preferredAppGroupType": {
+                        "value": "[parameters('preferredAppGroupType')]"
+                    },
+                    "vmTemplate": {
+                        "value": "[parameters('vmTemplate')]"
+                    },
+                    "applicationGroupTags": {
+                        "value": "[parameters('applicationGroupTags')]"
+                    },
+                    "workspaceLocation": {
+                        "value": "[parameters('workspaceLocation')]"
+                    },
+                    "addToWorkspace": {
+                        "value": "[parameters('addToWorkspace')]"
+                    }
+                },
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "envName": {
+                            "type": "string"
+                        },
+                        "regSuffix": {
+                            "type": "string"
+                        },
+                        "baseTime": {
+                            "type": "string"
+                        },
+                        "hostpoolDescription": {
+                            "type": "string"
+                        },
+                        "allApplicationGroupReferences": {
+                            "type": "string"
+                        },
+                        "hostpoolTags": {
+                            "type": "object"
+                        },
+                        "hostpoolType": {
+                            "type": "string"
+                        },
+                        "customRdpProperty": {
+                            "type": "string"
+                        },
+                        "personalDesktopAssignmentType": {
+                            "type": "string"
+                        },
+                        "maxSessionLimit": {
+                            "type": "int"
+                        },
+                        "loadBalancerType": {
+                            "type": "string"
+                        },
+                        "validationEnvironment": {
+                            "type": "bool"
+                        },
+                        "preferredAppGroupType": {
+                            "type": "string"
+                        },
+                        "vmTemplate": {
+                            "type": "string"
+                        },
+                        "applicationGroupTags": {
+                            "type": "object"
+                        },
+                        "workspaceLocation": {
+                            "type": "string"
+                        },
+                        "addToWorkspace": {
+                            "type": "bool"
+                        }
+                    },
+                    "variables": {
+                        "location": "[parameters('workspaceLocation')]",
+                        "hostpoolName": "[concat('hp-', parameters('envName'), '-', variables('location'))]",
+                        "workspaceResourceGroup": "[resourceGroup().name]",
+                        "tokenExpirationTime": "[dateTimeAdd(parameters('baseTime'), 'P20D')]",
+                        "deploymentId": "[guid(resourceGroup().id)]",
+                        "workspaceName": "[parameters('envName')]",
+                        "appGroupName": "[concat('ag-', parameters('envName'), '-', variables('location'),'-dsk')]",
+                        "appGroupResourceId": "[createArray(resourceId('Microsoft.DesktopVirtualization/applicationgroups/', variables('appGroupName')))]",
+                        "applicationGroupReferencesArr": "[if(equals('',parameters('allApplicationGroupReferences')), variables('appGroupResourceId'), concat(split(parameters('allApplicationGroupReferences'),','), variables('appGroupResourceId')))]"
+                    },
+                    "resources": [
+                        {
+                            "name": "[variables('hostpoolName')]",
+                            "apiVersion": "2019-12-10-preview",
+                            "type": "Microsoft.DesktopVirtualization/hostpools",
+                            "location": "[variables('location')]",
+                            "tags": "[parameters('hostpoolTags')]",
+                            "properties": {
+                                "friendlyName": "[variables('hostpoolName')]",
+                                "description": "[parameters('hostpoolDescription')]",
+                                "hostpoolType": "[parameters('hostpoolType')]",
+                                "customRdpProperty": "[parameters('customRdpProperty')]",
+                                "personalDesktopAssignmentType": "[parameters('personalDesktopAssignmentType')]",
+                                "maxSessionLimit": "[parameters('maxSessionLimit')]",
+                                "loadBalancerType": "[parameters('loadBalancerType')]",
+                                "validationEnvironment": "[parameters('validationEnvironment')]",
+                                "preferredAppGroupType": "[parameters('preferredAppGroupType')]",
+                                "ring": null,
+                                "registrationInfo": {
+                                    "expirationTime": "[variables('tokenExpirationTime')]",
+                                    "token": null,
+                                    "registrationTokenOperation": "Update"
+                                },
+                                "vmTemplate": "[parameters('vmTemplate')]"
+                            }
+                        },
+                        {
+                            "name": "[variables('appGroupName')]",
+                            "apiVersion": "2019-12-10-preview",
+                            "type": "Microsoft.DesktopVirtualization/applicationgroups",
+                            "location": "[variables('location')]",
+                            "tags": "[parameters('applicationGroupTags')]",
+                            "properties": {
+                                "hostpoolarmpath": "[resourceId('Microsoft.DesktopVirtualization/hostpools/', variables('hostpoolName'))]",
+                                "friendlyName": "Default Desktop",
+                                "description": "Desktop Application Group created through the Hostpool Wizard",
+                                "applicationGroupType": "Desktop"
+                            },
+                            "dependsOn": [
+                                "[resourceId('Microsoft.DesktopVirtualization/hostpools/', variables('hostpoolName'))]"
+                            ]
+                        },
+                        {
+                            "apiVersion": "2018-05-01",
+                            "name": "[concat('Workspace-linkedTemplate-', variables('deploymentId'))]",
+                            "type": "Microsoft.Resources/deployments",
+                            "resourceGroup": "[variables('workspaceResourceGroup')]",
+                            "condition": "[parameters('addToWorkspace')]",
+                            "properties": {
+                                "mode": "Incremental",
+                                "template": {
+                                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                                    "contentVersion": "1.0.0.0",
+                                    "resources": [
+                                        {
+                                            "apiVersion": "2019-12-10-preview",
+                                            "name": "[variables('workSpaceName')]",
+                                            "type": "Microsoft.DesktopVirtualization/workspaces",
+                                            "location": "[parameters('workspaceLocation')]",
+                                            "properties": {
+                                                "applicationGroupReferences": "[variables('applicationGroupReferencesArr')]"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            "dependsOn": [
+                                "[resourceId('Microsoft.DesktopVirtualization/applicationgroups/', variables('appGroupName'))]"
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
